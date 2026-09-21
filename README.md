@@ -6,7 +6,7 @@ Dokumentacja produktu: [`docs/`](docs/) — zacznij od [`docs/PLAN.md`](docs/PLA
 
 ## Uruchomienie lokalne
 
-Wymagany Node.js 22+.
+Wymagany Node.js 22.22+ (Netlify buduje na 24).
 
 ```bash
 npm install
