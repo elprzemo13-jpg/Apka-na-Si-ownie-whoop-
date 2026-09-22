@@ -1,6 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "./local";
 import { sortByPosition } from "./repo";
+import type { PastPerformance } from "../metrics/progression";
 import type { Discipline, Exercise, PlanChecklistItem, PlanDay, PlanExercise, WeeklyGoal } from "./types";
 
 const live = <T extends { deleted_at: string | null }>(rows: T[]) => rows.filter((r) => r.deleted_at === null);
@@ -63,5 +64,52 @@ export function useExercises(userId: string | undefined): Exercise[] | undefined
     if (!userId) return [];
     const rows = live(await db.exercises.where("user_id").equals(userId).toArray());
     return rows.sort((a, b) => a.name.localeCompare(b.name, "pl"));
+  }, [userId]);
+}
+
+export type ExerciseHistory = Map<string, PastPerformance[]>;
+
+/**
+ * Past performances per exercise, newest first — the input for weight
+ * suggestions and personal records. Skipped and deleted rows are left out.
+ */
+export function useExerciseHistories(exerciseIds: string[]): ExerciseHistory | undefined {
+  const key = exerciseIds.join(",");
+  return useLiveQuery(async () => {
+    const result: ExerciseHistory = new Map();
+    if (exerciseIds.length === 0) return result;
+
+    const performed = live(await db.session_exercises.where("exercise_id").anyOf(exerciseIds).toArray())
+      .filter((row) => !row.skipped);
+    const sessions = await db.sessions.bulkGet([...new Set(performed.map((p) => p.session_id))]);
+    const sessionById = new Map(sessions.filter(Boolean).map((s) => [s!.id, s!]));
+    const allSets = live(
+      await db.session_sets.where("session_exercise_id").anyOf(performed.map((p) => p.id)).toArray(),
+    );
+
+    for (const row of performed) {
+      const session = sessionById.get(row.session_id);
+      if (!session || session.deleted_at !== null) continue;
+      const sets = allSets
+        .filter((s) => s.session_exercise_id === row.id)
+        .sort((a, b) => a.set_no - b.set_no)
+        .map((s) => ({ reps: s.reps, weight_kg: s.weight_kg }));
+      if (sets.length === 0) continue;
+      const list = result.get(row.exercise_id) ?? [];
+      list.push({ performed_on: session.performed_on, created_at: session.created_at, sets });
+      result.set(row.exercise_id, list);
+    }
+    return result;
+  }, [key]);
+}
+
+/** Plan day of the most recent gym session — the anchor for a rotation plan. */
+export function useLastGymDayId(userId: string | undefined): string | null | undefined {
+  return useLiveQuery(async () => {
+    if (!userId) return null;
+    const sessions = live(await db.sessions.where("user_id").equals(userId).toArray())
+      .filter((s) => s.discipline === "gym" && s.plan_day_id)
+      .sort((a, b) => b.performed_on.localeCompare(a.performed_on) || b.created_at.localeCompare(a.created_at));
+    return sessions[0]?.plan_day_id ?? null;
   }, [userId]);
 }
