@@ -63,7 +63,8 @@ describe("canSaveGym", () => {
 describe("saveGymSession", () => {
   it("drops empty sets and keeps the filled ones", async () => {
     await saveGymSession("u1", draft(), db);
-    const sets = await db.session_sets.toArray();
+    // toArray() has no defined order, so sort before comparing.
+    const sets = (await db.session_sets.toArray()).sort((a, b) => a.set_no - b.set_no);
     expect(sets).toHaveLength(2);
     expect(sets.map((s) => s.set_no)).toEqual([1, 2]);
     expect(sets[0]?.weight_kg).toBe(60);
@@ -117,7 +118,7 @@ describe("saveGymSession", () => {
 
   it("queues everything for the server", async () => {
     await saveGymSession("u1", draft({ checklist: checklist([true]) }), db);
-    const queued = await db.outbox.toArray();
+    const queued = await db.outbox.orderBy("seq").toArray();
     expect(queued.map((q) => q.table)).toEqual([
       "sessions",
       "session_checklist_items",
