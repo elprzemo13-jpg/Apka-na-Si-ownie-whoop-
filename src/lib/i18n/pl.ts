@@ -236,6 +236,12 @@ export const pl = {
     remove: "Usuń",
     addItem: "+ Dodaj pozycję",
     insertDefaults: "Wstaw domyślną rozgrzewkę (3 pozycje)",
+    stretchPacks: {
+      legs: "Nogi",
+      pull: "Ciągnięcie",
+      push: "Pchanie i barki",
+      core: "Core i biodra",
+    },
     itemPlaceholder: "np. Czworogłowy — 30 s/nogę",
     seconds: "s",
     perSide: "na stronę",

@@ -200,3 +200,43 @@ export async function addDefaultWarmup(planId: string) {
     await addChecklistItem(planId, null, "warmup", label, detail);
   }
 }
+
+/**
+ * Stretch packs taken from the owner's plan (docs/reference/trening.html):
+ * concrete positions for the muscles that day trained. Picked by hand, not
+ * guessed from the day's name — every item stays editable.
+ */
+export const STRETCH_PACKS = {
+  legs: [
+    "Czworogłowy — 30 s/nogę",
+    "Dwugłowy uda — 30 s/nogę",
+    "Zginacze bioder — 30 s/stronę",
+    "Łydki — 30 s/nogę",
+  ],
+  pull: [
+    "Najszersze grzbietu — 30 s/stronę",
+    "Biceps — 30 s/ramię",
+    "Klatka w futrynie — 30 s",
+    "Kark — 30 s/stronę",
+  ],
+  push: [
+    "Klatka w futrynie — 30 s",
+    "Przód barku — 30 s/stronę",
+    "Triceps za głową — 30 s/ramię",
+    "Kark — 30 s/stronę",
+  ],
+  core: [
+    "Pośladki (figure-4) — 30 s/stronę",
+    "Zginacze bioder — 30 s/stronę",
+    "Brzuch (kobra) — 30 s",
+    "Dolny grzbiet — 30 s",
+  ],
+} as const;
+
+export type StretchPack = keyof typeof STRETCH_PACKS;
+
+export async function addStretchPack(planId: string, dayId: string, pack: StretchPack) {
+  for (const label of STRETCH_PACKS[pack]) {
+    await addChecklistItem(planId, dayId, "stretch", label);
+  }
+}

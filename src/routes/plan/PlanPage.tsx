@@ -94,7 +94,7 @@ export function PlanPage() {
         kind="warmup"
         title={t.plan.warmup}
         hint={t.plan.warmupHint}
-        onInsertDefaults={() => void addDefaultWarmup(plan.id)}
+        presets={[{ label: t.plan.insertDefaults, onInsert: () => void addDefaultWarmup(plan.id) }]}
       />
 
       <GoalsSection userId={userId} />

@@ -12,10 +12,10 @@ type Props = {
   title: string;
   hint: string;
   /** offered only while the list is empty */
-  onInsertDefaults?: () => void;
+  presets?: { label: string; onInsert: () => void }[];
 };
 
-export function ChecklistEditor({ planId, dayId, kind, title, hint, onInsertDefaults }: Props) {
+export function ChecklistEditor({ planId, dayId, kind, title, hint, presets }: Props) {
   const items = useChecklist(planId, kind, dayId);
   const [draft, setDraft] = useState("");
   const accent = kind === "warmup" ? "text-yellow" : "text-blue";
@@ -31,14 +31,19 @@ export function ChecklistEditor({ planId, dayId, kind, title, hint, onInsertDefa
     <section className="mb-6">
       <div className={`section-label mb-1 ${accent}`}>{title}</div>
       <p className="mb-2.5 text-[11px] text-dim">{hint}</p>
-      {onInsertDefaults && items?.length === 0 && (
-        <button
-          type="button"
-          onClick={onInsertDefaults}
-          className="mb-2 min-h-tap w-full rounded-[10px] border border-dashed border-line text-[12px] text-dim"
-        >
-          {t.plan.insertDefaults}
-        </button>
+      {presets && items?.length === 0 && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          {presets.map((preset) => (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={preset.onInsert}
+              className="min-h-tap rounded-full border border-dashed border-line px-3.5 text-[12px] text-dim"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
       )}
       <div className="rounded-[14px] bg-panel p-2">
         {items?.map((item) => (

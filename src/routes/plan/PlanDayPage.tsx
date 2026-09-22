@@ -6,6 +6,7 @@ import { TextField } from "../../components/ui/TextField";
 import { useAuth } from "../../lib/auth/AuthProvider";
 import {
   addPlanExercise,
+  addStretchPack,
   deletePlanDay,
   movePlanExercise,
   updatePlanDay,
@@ -173,6 +174,10 @@ export function PlanDayPage() {
         kind="stretch"
         title={t.plan.stretch}
         hint={t.plan.stretchHint}
+        presets={(["legs", "pull", "push", "core"] as const).map((pack) => ({
+          label: t.plan.stretchPacks[pack],
+          onInsert: () => void addStretchPack(day.plan_id, day.id, pack),
+        }))}
       />
 
       <Button
