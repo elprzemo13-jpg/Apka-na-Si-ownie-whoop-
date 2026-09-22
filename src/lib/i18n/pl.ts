@@ -113,6 +113,11 @@ export const pl = {
       "Po pierwszych treningach zobaczysz realizację tygodnia, obciążenie ze wszystkich dyscyplin, regularność, rozgrzewkę i rozciąganie.",
     buildPlan: "Zbuduj swój plan",
   },
+  pwa: {
+    offlineReady: "Apka działa teraz bez internetu.",
+    updateReady: "Jest nowa wersja aplikacji.",
+    reload: "Odśwież",
+  },
   sync: {
     synced: "Zsynchronizowane",
     syncing: "Synchronizuję…",

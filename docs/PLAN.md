@@ -78,7 +78,7 @@ docs/ — BRIEF, DECISIONS, DESIGN, ROADMAP, PLAN, reference/
 | E4 | Pływanie/bieg/rower + Log (data, edycja, usuwanie) | wszystkie dyscypliny |
 | — | (import starych danych z CSV, jednorazowy skrypt) | historia dla obciążenia |
 | E5 | Wskaźniki, ekran Dziś, pusty stan, Trendy | pierwszy ekran |
-| E6 | Utwardzenie PWA/offline, status sync, test na telefonie | tryb samolotowy |
+| E6 | (PWA i offline przeniesione przed E3 na prośbę właściciela 2026-09-22) — zostaje utwardzenie i testy na telefonie | tryb samolotowy |
 | E7 | Znajomi, prywatność, feed, ranking | społeczność |
 | E8 | CSV, README z limitami, poprawki | wersja do ludzi |
 

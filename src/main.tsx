@@ -4,6 +4,7 @@ import { RouterProvider } from "react-router/dom";
 import { router } from "./app/router";
 import { AuthProvider } from "./lib/auth/AuthProvider";
 import { t } from "./lib/i18n/pl";
+import { UpdatePrompt } from "./components/ui/UpdatePrompt";
 import { isSupabaseConfigured } from "./lib/supabase";
 import "./index.css";
 
@@ -21,6 +22,7 @@ createRoot(document.getElementById("root")!).render(
     {isSupabaseConfigured ? (
       <AuthProvider>
         <RouterProvider router={router} />
+        <UpdatePrompt />
       </AuthProvider>
     ) : (
       <ConfigMissing />

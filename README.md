@@ -36,3 +36,9 @@ Netlify, konfiguracja w [`netlify.toml`](netlify.toml) (build `npm run build`, k
 | Supabase Auth | wbudowany serwer maili wysyła tylko do członków zespołu projektu | bez własnego SMTP rejestracja i reset hasła nie działają | — (używamy Brevo) |
 | Brevo Free | 300 maili / dzień, nadawca bez domeny | maile mogą trafiać do spamu | własna domena + Resend / Brevo z uwierzytelnioną domeną |
 | Netlify Free | adres `*.netlify.app`, limit transferu | brak własnej domeny | domena (~50 zł / rok) |
+
+## PWA
+
+Aplikacja instaluje się na telefonie (Chrome: menu → „Zainstaluj aplikację”; iPhone: Udostępnij → „Do ekranu początkowego”) i uruchamia bez internetu — pliki trzyma service worker, dane lokalna baza IndexedDB.
+
+Nowa wersja nie przeładowuje się sama. Pojawia się pasek „Jest nowa wersja aplikacji” z przyciskiem „Odśwież”, żeby aktualizacja nigdy nie wypadła w środku serii.
