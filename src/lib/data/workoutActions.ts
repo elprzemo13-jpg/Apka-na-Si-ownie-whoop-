@@ -121,3 +121,55 @@ export async function saveGymSession(userId: string, draft: GymDraft, database: 
 
   return session;
 }
+
+/**
+ * Builds the form rows from the plan, carrying over whatever is already typed.
+ *
+ * The plan comes from a live query that emits a fresh array on every local
+ * database change — including every background sync. Rebuilding blindly wiped
+ * sets mid-workout, so the previous draft always wins for rows that still exist.
+ */
+export function buildExerciseDrafts(
+  rows: {
+    id: string;
+    exercise_id: string;
+    target_sets: number;
+    rep_min: number;
+    rep_max: number;
+    rep_unit: RepUnit;
+    per_side: boolean;
+    exercise?: { name: string } | undefined;
+  }[],
+  previous: ExerciseDraft[] = [],
+): ExerciseDraft[] {
+  const byId = new Map(previous.map((draft) => [draft.planExerciseId, draft]));
+  return rows.map((row) => {
+    const before = byId.get(row.id);
+    const planned = Array.from({ length: row.target_sets }, () => ({ reps: "", weight: "", height: "" }));
+    return {
+      planExerciseId: row.id,
+      exerciseId: row.exercise_id,
+      name: row.exercise?.name ?? before?.name ?? "",
+      skipped: before?.skipped ?? false,
+      targetSets: row.target_sets,
+      repMin: row.rep_min,
+      repMax: row.rep_max,
+      repUnit: row.rep_unit,
+      perSide: row.per_side,
+      // Keep every set the user typed, including extra ones they added.
+      sets: before ? [...before.sets, ...planned.slice(before.sets.length)] : planned,
+    };
+  });
+}
+
+/** Same idea for the checklists: ticks survive a rebuild, matched by label. */
+export function buildChecklistDrafts(
+  warmup: { label: string }[],
+  stretch: { label: string }[],
+  previous: ChecklistDraft[] = [],
+): ChecklistDraft[] {
+  const doneBefore = new Set(previous.filter((i) => i.done).map((i) => `${i.kind}:${i.label}`));
+  const build = (items: { label: string }[], kind: "warmup" | "stretch") =>
+    items.map((item) => ({ label: item.label, kind, done: doneBefore.has(`${kind}:${item.label}`) }));
+  return [...build(warmup, "warmup"), ...build(stretch, "stretch")];
+}

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { Button } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { Notice } from "../../components/ui/Notice";
 import { ChecklistBlock } from "../../components/workout/ChecklistBlock";
 import { ExerciseCard } from "../../components/workout/ExerciseCard";
 import { TimerBar } from "../../components/workout/TimerBar";
@@ -17,6 +18,8 @@ import {
   usePlanExercises,
 } from "../../lib/data/queries";
 import {
+  buildChecklistDrafts,
+  buildExerciseDrafts,
   canSaveGym,
   saveGymSession,
   type ChecklistDraft,
@@ -57,31 +60,18 @@ export function GymWorkoutPage() {
   // restarts the timer (the bar remounts on a new key).
   const [timer, setTimer] = useState<{ seconds: number; at: number } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Build the form once the plan is loaded, and again when the day changes.
+  // The live query emits a fresh array on every local database change, so a
+  // background sync would otherwise wipe the form mid-workout: merge, never
+  // rebuild.
   useEffect(() => {
     if (!planExercises) return;
-    setExercises(
-      planExercises.map((row) => ({
-        planExerciseId: row.id,
-        exerciseId: row.exercise_id,
-        name: row.exercise?.name ?? "",
-        skipped: false,
-        targetSets: row.target_sets,
-        repMin: row.rep_min,
-        repMax: row.rep_max,
-        repUnit: row.rep_unit,
-        perSide: row.per_side,
-        sets: Array.from({ length: row.target_sets }, () => ({ reps: "", weight: "", height: "" })),
-      })),
-    );
+    setExercises((previous) => buildExerciseDrafts(planExercises, previous ?? []));
   }, [planExercises]);
 
   useEffect(() => {
-    setChecklist([
-      ...(warmupItems ?? []).map((item) => ({ label: item.label, kind: "warmup" as const, done: false })),
-      ...(stretchItems ?? []).map((item) => ({ label: item.label, kind: "stretch" as const, done: false })),
-    ]);
+    setChecklist((previous) => buildChecklistDrafts(warmupItems ?? [], stretchItems ?? [], previous));
   }, [warmupItems, stretchItems]);
 
   if (plan === undefined || days === undefined) return null;
@@ -192,15 +182,25 @@ export function GymWorkoutPage() {
         </p>
       )}
 
+      {saveError && <Notice tone="error">{saveError}</Notice>}
+      {!canSave && <p className="mb-2 text-[12px] text-dim">{t.workout.needsOneSet}</p>}
+
       <Button
         busy={busy}
         disabled={!canSave}
         onClick={async () => {
           if (!userId) return;
           setBusy(true);
-          await saveGymSession(userId, draft);
-          setBusy(false);
-          navigate("/", { replace: true });
+          setSaveError(null);
+          try {
+            await saveGymSession(userId, draft);
+            navigate("/", { replace: true });
+          } catch (error) {
+            // The workout stays on screen so nothing typed is lost.
+            setSaveError(error instanceof Error ? error.message : t.errors.generic);
+          } finally {
+            setBusy(false);
+          }
         }}
       >
         ✓ {t.workout.save}

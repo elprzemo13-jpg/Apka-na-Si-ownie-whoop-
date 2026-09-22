@@ -154,6 +154,7 @@ export const pl = {
     unskip: "Przywróć ćwiczenie",
     restTimer: "Timer przerwy",
     save: "Zapisz trening",
+    needsOneSet: "Wpisz przynajmniej jedną serię z liczbą powtórzeń, żeby zapisać trening.",
     saved: "Trening zapisany.",
     stretchNudge:
       "Rozciąganie nieodhaczone. Możesz zapisać, ale wskaźnik to policzy. Sześć minut teraz, na rozgrzanym ciele, robi różnicę.",

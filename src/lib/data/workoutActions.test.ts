@@ -2,7 +2,15 @@ import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { LocalDb } from "./local";
 import { newRow } from "./repo";
-import { canSaveGym, saveGymSession, type ChecklistDraft, type ExerciseDraft, type GymDraft } from "./workoutActions";
+import {
+  buildChecklistDrafts,
+  buildExerciseDrafts,
+  canSaveGym,
+  saveGymSession,
+  type ChecklistDraft,
+  type ExerciseDraft,
+  type GymDraft,
+} from "./workoutActions";
 import type { PlanDay } from "./types";
 
 let db: LocalDb;
@@ -126,5 +134,57 @@ describe("saveGymSession", () => {
       "session_sets",
       "session_sets",
     ]);
+  });
+});
+
+describe("rebuilding the form while it is being filled in", () => {
+  const planRow = (over: Record<string, unknown> = {}) => ({
+    id: "pe-1",
+    exercise_id: "ex-1",
+    target_sets: 3,
+    rep_min: 5,
+    rep_max: 6,
+    rep_unit: "reps" as const,
+    per_side: false,
+    exercise: { name: "Przysiad ze sztangą" },
+    ...over,
+  });
+
+  it("keeps typed sets when the plan is re-read during a background sync", () => {
+    const first = buildExerciseDrafts([planRow()]);
+    const typed = [
+      { ...first[0]!, sets: [{ reps: "6", weight: "60", height: "" }, ...first[0]!.sets.slice(1)] },
+    ];
+    // A sync emits an equal-but-new array; this used to wipe the workout.
+    const merged = buildExerciseDrafts([planRow()], typed);
+    expect(merged[0]?.sets[0]).toEqual({ reps: "6", weight: "60", height: "" });
+    expect(canSaveGym(draft({ exercises: merged }))).toBe(true);
+  });
+
+  it("keeps a skipped exercise skipped and extra sets added by hand", () => {
+    const typed = buildExerciseDrafts([planRow()]).map((d) => ({
+      ...d,
+      skipped: true,
+      sets: [...d.sets, { reps: "8", weight: "40", height: "" }],
+    }));
+    const merged = buildExerciseDrafts([planRow()], typed);
+    expect(merged[0]?.skipped).toBe(true);
+    expect(merged[0]?.sets).toHaveLength(4);
+  });
+
+  it("adds rows for exercises added to the plan and drops removed ones", () => {
+    const typed = buildExerciseDrafts([planRow()]);
+    const merged = buildExerciseDrafts([planRow({ id: "pe-2", exercise: { name: "Wykroki" } })], typed);
+    expect(merged.map((d) => d.planExerciseId)).toEqual(["pe-2"]);
+  });
+
+  it("keeps ticked checklist items across a rebuild", () => {
+    const items = [{ label: "Lekkie cardio" }, { label: "Krążenia ramion" }];
+    const ticked = buildChecklistDrafts(items, [{ label: "Czworogłowy" }]).map((item, i) =>
+      i === 0 ? { ...item, done: true } : item,
+    );
+    const merged = buildChecklistDrafts(items, [{ label: "Czworogłowy" }], ticked);
+    expect(merged[0]?.done).toBe(true);
+    expect(merged[1]?.done).toBe(false);
   });
 });
