@@ -2,6 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "./local";
 import { sortByPosition } from "./repo";
 import type { PastPerformance } from "../metrics/progression";
+import type { LoadSession } from "../metrics/weekly";
 import type { Discipline, Exercise, PlanChecklistItem, PlanDay, PlanExercise, WeeklyGoal } from "./types";
 
 const live = <T extends { deleted_at: string | null }>(rows: T[]) => rows.filter((r) => r.deleted_at === null);
@@ -151,4 +152,73 @@ export function useSessionDetails(sessionId: string | undefined): SessionDetail[
         .map((s) => ({ reps: s.reps, weight_kg: s.weight_kg, height_cm: s.height_cm })),
     }));
   }, [sessionId]);
+}
+
+/**
+ * Sessions with everything the weekly indicators need. Gym volume is summed
+ * locally from the sets, so the numbers are right before the server has seen
+ * them — the same formula the database trigger uses.
+ */
+export type LoadRow = LoadSession & { id: string; underwater_m: number | null; duration_s: number | null };
+
+export function useLoadSessions(userId: string | undefined): LoadRow[] | undefined {
+  return useLiveQuery(async () => {
+    if (!userId) return [];
+    const sessions = live(await db.sessions.where("user_id").equals(userId).toArray());
+    const gymIds = sessions.filter((s) => s.discipline === "gym").map((s) => s.id);
+    const exercises = live(await db.session_exercises.where("session_id").anyOf(gymIds).toArray()).filter(
+      (row) => !row.skipped,
+    );
+    const sets = live(
+      await db.session_sets.where("session_exercise_id").anyOf(exercises.map((e) => e.id)).toArray(),
+    );
+    const volumeByExercise = new Map<string, number>();
+    for (const set of sets) {
+      const volume = set.reps * (set.weight_kg ?? 0);
+      volumeByExercise.set(set.session_exercise_id, (volumeByExercise.get(set.session_exercise_id) ?? 0) + volume);
+    }
+    const volumeBySession = new Map<string, number>();
+    for (const exercise of exercises) {
+      const volume = volumeByExercise.get(exercise.id) ?? 0;
+      volumeBySession.set(exercise.session_id, (volumeBySession.get(exercise.session_id) ?? 0) + volume);
+    }
+    return sessions.map((session) => ({
+      discipline: session.discipline,
+      performed_on: session.performed_on,
+      distance_m: session.distance_m,
+      volume_kg: volumeBySession.get(session.id) ?? 0,
+      warmup_done: session.warmup_done,
+      stretch_done: session.stretch_done,
+      underwater_m: session.underwater_m,
+      duration_s: session.duration_s,
+      id: session.id,
+    }));
+  }, [userId]);
+}
+
+/** Personal records per exercise, for the Trends screen. */
+export function useAllRecords(userId: string | undefined) {
+  return useLiveQuery(async () => {
+    if (!userId) return [];
+    const exercises = live(await db.exercises.where("user_id").equals(userId).toArray());
+    const performed = live(
+      await db.session_exercises.where("exercise_id").anyOf(exercises.map((e) => e.id)).toArray(),
+    ).filter((row) => !row.skipped);
+    const sets = live(
+      await db.session_sets.where("session_exercise_id").anyOf(performed.map((p) => p.id)).toArray(),
+    );
+    return exercises
+      .map((exercise) => {
+        const rows = performed.filter((p) => p.exercise_id === exercise.id);
+        const history = rows.map((row) => sets.filter((s) => s.session_exercise_id === row.id));
+        const maxWeight = Math.max(0, ...history.flat().map((s) => s.weight_kg ?? 0));
+        const bestVolume = Math.max(
+          0,
+          ...history.map((group) => group.reduce((sum, s) => sum + s.reps * (s.weight_kg ?? 0), 0)),
+        );
+        return { name: exercise.name, sessions: history.length, maxWeight, bestVolume };
+      })
+      .filter((record) => record.sessions > 0)
+      .sort((a, b) => b.maxWeight - a.maxWeight || a.name.localeCompare(b.name, "pl"));
+  }, [userId]);
 }
