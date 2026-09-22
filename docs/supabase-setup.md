@@ -11,7 +11,7 @@ Każdy plik uruchamiaj **raz**. Błąd „already exists" oznacza, że plik był
 |---|---|
 | `20260921000001_schema.sql` | 2026-09-22 |
 | `20260921000002_rls.sql` | 2026-09-22 |
-| `20260922000003_access_level_viewer.sql` | — |
+| `20260922000003_access_level_viewer.sql` | 2026-09-22 |
 
 ## Authentication → URL Configuration
 
