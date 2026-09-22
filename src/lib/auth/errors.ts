@@ -18,6 +18,7 @@ export function authErrorMessage(error: MaybeError): string {
     case "same_password":
       return t.errors.samePassword;
     case "over_email_send_rate_limit":
+      return t.errors.emailRateLimit;
     case "over_request_rate_limit":
       return t.errors.rateLimit;
     case "otp_expired":

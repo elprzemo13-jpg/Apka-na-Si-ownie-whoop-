@@ -102,7 +102,9 @@ export const pl = {
     emailNotConfirmed: "Najpierw potwierdź adres email — link jest w wiadomości od nas.",
     weakPassword: "Hasło jest za słabe. Użyj minimum 8 znaków.",
     samePassword: "Nowe hasło musi się różnić od poprzedniego.",
-    rateLimit: "Za dużo prób w krótkim czasie. Spróbuj za kilka minut.",
+    rateLimit: "Za dużo prób z tej sieci. Odczekaj 2 minuty i spróbuj jeszcze raz.",
+    emailRateLimit:
+      "Wysłaliśmy już maksymalną liczbę wiadomości na godzinę. Kolejny mail można wysłać najwcześniej za godzinę.",
     linkExpired: "Link wygasł albo został już użyty. Wyślij nowy.",
     usernameTaken: "Ta nazwa jest już zajęta.",
     usernameFormat: "Nazwa może mieć 3–24 znaki: małe litery, cyfry i podkreślnik.",
