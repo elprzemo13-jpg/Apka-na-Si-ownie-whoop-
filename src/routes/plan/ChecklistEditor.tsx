@@ -11,9 +11,11 @@ type Props = {
   kind: ChecklistKind;
   title: string;
   hint: string;
+  /** offered only while the list is empty */
+  onInsertDefaults?: () => void;
 };
 
-export function ChecklistEditor({ planId, dayId, kind, title, hint }: Props) {
+export function ChecklistEditor({ planId, dayId, kind, title, hint, onInsertDefaults }: Props) {
   const items = useChecklist(planId, kind, dayId);
   const [draft, setDraft] = useState("");
   const accent = kind === "warmup" ? "text-yellow" : "text-blue";
@@ -29,6 +31,15 @@ export function ChecklistEditor({ planId, dayId, kind, title, hint }: Props) {
     <section className="mb-6">
       <div className={`section-label mb-1 ${accent}`}>{title}</div>
       <p className="mb-2.5 text-[11px] text-dim">{hint}</p>
+      {onInsertDefaults && items?.length === 0 && (
+        <button
+          type="button"
+          onClick={onInsertDefaults}
+          className="mb-2 min-h-tap w-full rounded-[10px] border border-dashed border-line text-[12px] text-dim"
+        >
+          {t.plan.insertDefaults}
+        </button>
+      )}
       <div className="rounded-[14px] bg-panel p-2">
         {items?.map((item) => (
           <div key={item.id} className="flex items-center gap-2 border-b border-line last:border-b-0">

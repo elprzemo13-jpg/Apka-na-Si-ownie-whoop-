@@ -5,8 +5,12 @@ import { newRow } from "./repo";
 import {
   buildChecklistDrafts,
   buildExerciseDrafts,
+  canSaveEndurance,
   canSaveGym,
+  deleteSession,
+  saveEnduranceSession,
   saveGymSession,
+  type EnduranceDraft,
   type ChecklistDraft,
   type ExerciseDraft,
   type GymDraft,
@@ -186,5 +190,62 @@ describe("rebuilding the form while it is being filled in", () => {
     const merged = buildChecklistDrafts(items, [{ label: "Czworogłowy" }], ticked);
     expect(merged[0]?.done).toBe(true);
     expect(merged[1]?.done).toBe(false);
+  });
+});
+
+describe("endurance sessions", () => {
+  const swim = (over: Partial<EnduranceDraft> = {}): EnduranceDraft => ({
+    discipline: "swim",
+    performedOn: "2026-09-22",
+    distance: "2500",
+    durationMin: "50",
+    sessionType: "Technika",
+    swimStyle: "Kraul",
+    underwaterM: "300",
+    notes: " 20×50 kraul ",
+    ...over,
+  });
+
+  it("stores swimming distance in metres and time in seconds", async () => {
+    await saveEnduranceSession("u1", swim(), db);
+    const row = (await db.sessions.toArray())[0]!;
+    expect(row).toMatchObject({
+      discipline: "swim",
+      distance_m: 2500,
+      duration_s: 3000,
+      swim_style: "Kraul",
+      underwater_m: 300,
+      notes: "20×50 kraul",
+    });
+  });
+
+  it("converts kilometres to metres for running and cycling", async () => {
+    await saveEnduranceSession("u1", swim({ discipline: "run", distance: "10,5", swimStyle: null, underwaterM: "" }), db);
+    const row = (await db.sessions.toArray())[0]!;
+    expect(row.distance_m).toBe(10500);
+    expect(row.swim_style).toBeNull();
+    expect(row.underwater_m).toBeNull();
+  });
+
+  it("needs both distance and time", () => {
+    expect(canSaveEndurance(swim())).toBe(true);
+    expect(canSaveEndurance(swim({ distance: "" }))).toBe(false);
+    expect(canSaveEndurance(swim({ durationMin: "0" }))).toBe(false);
+  });
+
+  it("updates an existing entry instead of adding a second one", async () => {
+    const first = await saveEnduranceSession("u1", swim(), db);
+    await saveEnduranceSession("u1", swim({ id: first.id, distance: "3000" }), db);
+    const rows = await db.sessions.toArray();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.distance_m).toBe(3000);
+  });
+
+  it("soft-deletes a gym session with its exercises and sets", async () => {
+    const saved = await saveGymSession("u1", draft(), db);
+    await deleteSession(saved.id, db);
+    expect((await db.sessions.get(saved.id))?.deleted_at).not.toBeNull();
+    expect((await db.session_exercises.toArray()).every((r) => r.deleted_at !== null)).toBe(true);
+    expect((await db.session_sets.toArray()).every((r) => r.deleted_at !== null)).toBe(true);
   });
 });

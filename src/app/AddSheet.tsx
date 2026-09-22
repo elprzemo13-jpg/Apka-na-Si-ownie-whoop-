@@ -7,9 +7,9 @@ type Props = { open: boolean; onClose: () => void };
 // Gym is green, endurance disciplines are blue (DESIGN.md).
 const options = [
   { key: "gym", color: "border-l-green", to: "/workout/gym", ...t.addSheet.gym },
-  { key: "swim", color: "border-l-blue", to: null, ...t.addSheet.swim },
-  { key: "run", color: "border-l-blue", to: null, ...t.addSheet.run },
-  { key: "bike", color: "border-l-blue", to: null, ...t.addSheet.bike },
+  { key: "swim", color: "border-l-blue", to: "/workout/endurance?type=swim", ...t.addSheet.swim },
+  { key: "run", color: "border-l-blue", to: "/workout/endurance?type=run", ...t.addSheet.run },
+  { key: "bike", color: "border-l-blue", to: "/workout/endurance?type=bike", ...t.addSheet.bike },
 ] as const;
 
 export function AddSheet({ open, onClose }: Props) {
@@ -17,7 +17,6 @@ export function AddSheet({ open, onClose }: Props) {
   return (
     <Sheet title={t.addSheet.title} open={open} onClose={onClose}>
       {options.map((option) => (
-        // Endurance forms arrive in E4.
         <button
           key={option.key}
           type="button"

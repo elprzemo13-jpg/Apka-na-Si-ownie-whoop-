@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { Button } from "../../components/ui/Button";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { useAuth } from "../../lib/auth/AuthProvider";
-import { addPlanDay, createPlan, movePlanDay } from "../../lib/data/planActions";
+import { addDefaultWarmup, addPlanDay, createPlan, movePlanDay } from "../../lib/data/planActions";
 import { useActivePlan, usePlanDays } from "../../lib/data/queries";
 import { t } from "../../lib/i18n/pl";
 import { ChecklistEditor } from "./ChecklistEditor";
@@ -94,6 +94,7 @@ export function PlanPage() {
         kind="warmup"
         title={t.plan.warmup}
         hint={t.plan.warmupHint}
+        onInsertDefaults={() => void addDefaultWarmup(plan.id)}
       />
 
       <GoalsSection userId={userId} />

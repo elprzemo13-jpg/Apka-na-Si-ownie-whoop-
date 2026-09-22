@@ -11,6 +11,7 @@ import { TodayPage } from "../routes/today/TodayPage";
 import { PlanPage } from "../routes/plan/PlanPage";
 import { PlanDayPage } from "../routes/plan/PlanDayPage";
 import { GymWorkoutPage } from "../routes/workout/GymWorkoutPage";
+import { EnduranceWorkoutPage } from "../routes/workout/EnduranceWorkoutPage";
 import { LogPage } from "../routes/log/LogPage";
 import { TrendsPage } from "../routes/trends/TrendsPage";
 import { SettingsPage } from "../routes/settings/SettingsPage";
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
       { path: "plan", element: <PlanPage /> },
       { path: "plan/day/:dayId", element: <PlanDayPage /> },
       { path: "workout/gym", element: <GymWorkoutPage /> },
+      { path: "workout/endurance", element: <EnduranceWorkoutPage /> },
       { path: "log", element: <LogPage /> },
       { path: "trends", element: <TrendsPage /> },
       { path: "settings", element: <SettingsPage /> },

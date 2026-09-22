@@ -15,6 +15,14 @@ import type {
 const nextPosition = (rows: { position: number }[]) =>
   rows.reduce((max, r) => Math.max(max, r.position), -1) + 1;
 
+// A starting warm-up, editable and removable — the plan itself stays empty,
+// but "remember to warm up" without concrete items does not work in practice.
+const DEFAULT_WARMUP: [string, string][] = [
+  ["Lekkie cardio — rowerek / wiosło / skakanka", "3-5 min, ma być ciepło, nie zmęczenie"],
+  ["Krążenia ramion, barków, bioder", "po 10 w każdą stronę"],
+  ["Serie rozgrzewkowe pierwszego ćwiczenia", "1-2 serie z lekkim ciężarem"],
+];
+
 export async function createPlan(userId: string, name: string) {
   const plan = newRow({
     owner_id: userId,
@@ -24,6 +32,9 @@ export async function createPlan(userId: string, name: string) {
     is_active: true,
   });
   await save("plans", plan);
+  for (const [label, detail] of DEFAULT_WARMUP) {
+    await addChecklistItem(plan.id, null, "warmup", label, detail);
+  }
   return plan;
 }
 
@@ -181,4 +192,11 @@ export async function setWeeklyGoal(userId: string, discipline: Discipline, targ
     ? { ...existing, target_sessions: target, deleted_at: null }
     : newRow({ user_id: userId, discipline, target_sessions: target });
   await save("weekly_goals", row);
+}
+
+/** For plans created before the default warm-up existed. */
+export async function addDefaultWarmup(planId: string) {
+  for (const [label, detail] of DEFAULT_WARMUP) {
+    await addChecklistItem(planId, null, "warmup", label, detail);
+  }
 }

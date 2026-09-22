@@ -113,3 +113,42 @@ export function useLastGymDayId(userId: string | undefined): string | null | und
     return sessions[0]?.plan_day_id ?? null;
   }, [userId]);
 }
+
+/** All sessions of a user, newest first. */
+export function useSessions(userId: string | undefined) {
+  return useLiveQuery(async () => {
+    if (!userId) return [];
+    return live(await db.sessions.where("user_id").equals(userId).toArray()).sort(
+      (a, b) => b.performed_on.localeCompare(a.performed_on) || b.created_at.localeCompare(a.created_at),
+    );
+  }, [userId]);
+}
+
+export function useSession(sessionId: string | undefined) {
+  return useLiveQuery(async () => (sessionId ? ((await db.sessions.get(sessionId)) ?? null) : null), [sessionId]);
+}
+
+export type SessionDetail = {
+  name: string;
+  skipped: boolean;
+  sets: { reps: number; weight_kg: number | null; height_cm: number | null }[];
+};
+
+/** Exercises and sets of one gym session, for the expanded log entry. */
+export function useSessionDetails(sessionId: string | undefined): SessionDetail[] | undefined {
+  return useLiveQuery(async () => {
+    if (!sessionId) return [];
+    const exercises = sortByPosition(live(await db.session_exercises.where("session_id").equals(sessionId).toArray()));
+    const sets = live(
+      await db.session_sets.where("session_exercise_id").anyOf(exercises.map((e) => e.id)).toArray(),
+    );
+    return exercises.map((exercise) => ({
+      name: exercise.name_snapshot,
+      skipped: exercise.skipped,
+      sets: sets
+        .filter((s) => s.session_exercise_id === exercise.id)
+        .sort((a, b) => a.set_no - b.set_no)
+        .map((s) => ({ reps: s.reps, weight_kg: s.weight_kg, height_cm: s.height_cm })),
+    }));
+  }, [sessionId]);
+}
