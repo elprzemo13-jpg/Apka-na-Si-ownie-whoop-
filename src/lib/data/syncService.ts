@@ -98,3 +98,24 @@ export function stopSync() {
 
 /** Number of rows still waiting to reach the server. */
 export const pendingCount = () => db.outbox.count();
+
+/** What is still waiting, and why the last attempt failed — shown in Settings. */
+export async function syncDiagnostics() {
+  const entries = await db.outbox.orderBy("seq").toArray();
+  const counts = new Map<string, number>();
+  for (const entry of entries) counts.set(entry.table, (counts.get(entry.table) ?? 0) + 1);
+  const failing = entries.find((entry) => entry.last_error);
+  return {
+    pending: entries.length,
+    byTable: [...counts.entries()].map(([table, count]) => `${table}: ${count}`),
+    lastError: failing?.last_error ?? null,
+    lastErrorTable: failing?.table ?? null,
+    lastSyncAt,
+    rows: {
+      sessions: await db.sessions.count(),
+      exercises: await db.session_exercises.count(),
+      sets: await db.session_sets.count(),
+      plans: await db.plans.count(),
+    },
+  };
+}

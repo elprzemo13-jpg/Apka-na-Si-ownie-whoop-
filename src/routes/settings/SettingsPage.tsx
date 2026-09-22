@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
+import { SyncDiagnostics } from "../../components/ui/SyncDiagnostics";
 import { useAuth } from "../../lib/auth/AuthProvider";
 import { t } from "../../lib/i18n/pl";
 
@@ -24,6 +25,8 @@ export function SettingsPage() {
         <Row label={t.settings.username} value={profile?.username ? `@${profile.username}` : "—"} />
         <Row label={t.settings.inviteCode} value={profile?.invite_code ?? "—"} />
       </div>
+      <SyncDiagnostics />
+
       <Button
         variant="ghost"
         busy={busy}

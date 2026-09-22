@@ -93,6 +93,11 @@ export const pl = {
     inviteCode: "Kod zaproszenia",
     signOut: "Wyloguj się",
     open: "Konto",
+    sync: "Synchronizacja",
+    pending: "Czeka na wysłanie",
+    stored: "Lokalnie: treningi / ćwiczenia / serie",
+    lastSync: "Ostatnia synchronizacja",
+    syncNow: "Synchronizuj teraz",
   },
   errors: {
     generic: "Coś poszło nie tak. Spróbuj ponownie.",
