@@ -192,3 +192,29 @@ describe("row level security", () => {
     ).rejects.toThrow(/row-level security/);
   });
 });
+
+describe("access_level", () => {
+  it("only answers for the caller, so pairs of other users can't be probed", async () => {
+    const carol = await db.createUser();
+    await makeFriends(bob, carol);
+    await db.query("update public.profiles set sharing_level = 'full' where id = $1", [carol]);
+
+    const asAlice = await db.as(alice, () =>
+      db.query<{ lvl: string }>("select public.access_level($1) as lvl", [carol]),
+    );
+    expect(asAlice.rows[0]!.lvl).toBe("none");
+
+    const asBob = await db.as(bob, () =>
+      db.query<{ lvl: string }>("select public.access_level($1) as lvl", [carol]),
+    );
+    expect(asBob.rows[0]!.lvl).toBe("full");
+
+    await expect(db.query("select public.access_level($1, $2)", [bob, carol])).rejects.toThrow(/does not exist/);
+  });
+
+  it("is not callable anonymously", async () => {
+    await db.exec("set role anon");
+    await expect(db.query("select public.access_level($1)", [bob])).rejects.toThrow(/permission denied/);
+    await db.exec("reset role");
+  });
+});
