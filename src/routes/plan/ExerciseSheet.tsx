@@ -31,7 +31,11 @@ export const emptyExerciseForm: ExerciseForm = {
 
 const loadTypes: LoadType[] = ["weighted", "bodyweight", "none"];
 const progressions: Progression[] = ["weight", "fixed", "height", "time"];
-const loadLabel = { weighted: t.exerciseForm.loadWeighted, bodyweight: t.exerciseForm.loadBodyweight, none: t.exerciseForm.loadNone };
+const loadLabel = {
+  weighted: t.exerciseForm.loadWeighted,
+  bodyweight: t.exerciseForm.loadBodyweight,
+  none: t.exerciseForm.loadNone,
+};
 const progLabel = {
   weight: t.exerciseForm.progWeight,
   fixed: t.exerciseForm.progFixed,
@@ -39,40 +43,64 @@ const progLabel = {
   time: t.exerciseForm.progTime,
 };
 
-function numberOr(value: string, fallback: number) {
+/**
+ * Numbers are kept as raw text while typing, so a field can be emptied and
+ * retyped. Clamping on every keystroke would snap a half-typed value back.
+ */
+type NumericFields = { sets: string; repMin: string; repMax: string; step: string; rest: string };
+
+function parse(value: string, fallback: number, min: number, max: number) {
   const parsed = Number(value.replace(",", "."));
-  return Number.isFinite(parsed) ? parsed : fallback;
+  if (!Number.isFinite(parsed) || value.trim() === "") return fallback;
+  return Math.min(max, Math.max(min, parsed));
 }
 
 export function ExerciseSheet({ open, initial, onClose, onSave }: Props) {
-  const [form, setForm] = useState<ExerciseForm>(initial ?? emptyExerciseForm);
+  const start = initial ?? emptyExerciseForm;
+  const [form, setForm] = useState<ExerciseForm>(start);
+  const [nums, setNums] = useState<NumericFields>({
+    sets: String(start.target_sets),
+    repMin: String(start.rep_min),
+    repMax: String(start.rep_max),
+    step: String(start.weight_step_kg),
+    rest: start.rest_s === null ? "" : String(start.rest_s),
+  });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
   const set = (changes: Partial<ExerciseForm>) => setForm((f) => ({ ...f, ...changes }));
+  const setNum = (changes: Partial<NumericFields>) => setNums((n) => ({ ...n, ...changes }));
 
   async function submit() {
     if (!form.name.trim()) {
       setError(t.exerciseForm.nameRequired);
       return;
     }
-    if (form.rep_max < form.rep_min) {
+    const repMin = Math.round(parse(nums.repMin, 1, 1, 999));
+    const repMax = Math.round(parse(nums.repMax, repMin, 1, 999));
+    if (repMax < repMin) {
       setError(t.exerciseForm.rangeInvalid);
       return;
     }
     setBusy(true);
-    await onSave({ ...form, name: form.name.trim(), annotation: form.annotation?.trim() || null });
+    await onSave({
+      ...form,
+      name: form.name.trim(),
+      annotation: form.annotation?.trim() || null,
+      target_sets: Math.round(parse(nums.sets, 1, 1, 20)),
+      rep_min: repMin,
+      rep_max: repMax,
+      weight_step_kg: parse(nums.step, 2.5, 0.5, 50),
+      rest_s: nums.rest.trim() === "" ? null : Math.round(parse(nums.rest, 90, 0, 900)),
+    });
     setBusy(false);
     onClose();
   }
 
-  const unitSuffix = form.rep_unit === "seconds" ? ` ${t.plan.seconds}` : "";
+  const unitSuffix = form.rep_unit === "seconds" ? ` (${t.plan.seconds})` : "";
 
   return (
-    <Sheet
-      open={open}
-      onClose={onClose}
-      title={initial ? t.exerciseForm.titleEdit : t.exerciseForm.titleNew}
-    >
+    <Sheet open={open} onClose={onClose} title={initial ? t.exerciseForm.titleEdit : t.exerciseForm.titleNew}>
       <TextField
         label={t.exerciseForm.name}
         placeholder={t.exerciseForm.namePlaceholder}
@@ -89,32 +117,28 @@ export function ExerciseSheet({ open, initial, onClose, onSave }: Props) {
 
       <div className="mb-3 flex gap-2">
         <TextField
-          className="w-24"
+          className="w-20"
           label={t.exerciseForm.sets}
           type="number"
           inputMode="numeric"
-          min={1}
-          max={20}
-          value={form.target_sets}
-          onChange={(e) => set({ target_sets: Math.max(1, Math.min(20, numberOr(e.target.value, 3))) })}
+          value={nums.sets}
+          onChange={(e) => setNum({ sets: e.target.value })}
         />
         <TextField
           className="flex-1"
           label={`${t.exerciseForm.repRange}${unitSuffix} — ${t.exerciseForm.repMin}`}
           type="number"
           inputMode="numeric"
-          min={1}
-          value={form.rep_min}
-          onChange={(e) => set({ rep_min: Math.max(1, numberOr(e.target.value, 8)) })}
+          value={nums.repMin}
+          onChange={(e) => setNum({ repMin: e.target.value })}
         />
         <TextField
           className="flex-1"
           label={t.exerciseForm.repMax}
           type="number"
           inputMode="numeric"
-          min={1}
-          value={form.rep_max}
-          onChange={(e) => set({ rep_max: Math.max(1, numberOr(e.target.value, 10)) })}
+          value={nums.repMax}
+          onChange={(e) => setNum({ repMax: e.target.value })}
         />
       </div>
 
@@ -127,11 +151,7 @@ export function ExerciseSheet({ open, initial, onClose, onSave }: Props) {
             onClick={() => set({ rep_unit: unit, progression: unit === "seconds" ? "time" : form.progression })}
           />
         ))}
-        <Chip
-          label={t.exerciseForm.perSide}
-          active={form.per_side}
-          onClick={() => set({ per_side: !form.per_side })}
-        />
+        <Chip label={t.exerciseForm.perSide} active={form.per_side} onClick={() => set({ per_side: !form.per_side })} />
       </div>
 
       <div className="mb-1 text-[10px] font-semibold tracking-[1.1px] text-dim uppercase">
@@ -144,7 +164,10 @@ export function ExerciseSheet({ open, initial, onClose, onSave }: Props) {
             label={loadLabel[type]}
             active={form.load_type === type}
             onClick={() =>
-              set({ load_type: type, progression: type === "none" && form.progression === "weight" ? "fixed" : form.progression })
+              set({
+                load_type: type,
+                progression: type === "none" && form.progression === "weight" ? "fixed" : form.progression,
+              })
             }
           />
         ))}
@@ -173,9 +196,8 @@ export function ExerciseSheet({ open, initial, onClose, onSave }: Props) {
           type="number"
           inputMode="decimal"
           step="0.5"
-          min={0.5}
-          value={form.weight_step_kg}
-          onChange={(e) => set({ weight_step_kg: Math.max(0.5, numberOr(e.target.value, 2.5)) })}
+          value={nums.step}
+          onChange={(e) => setNum({ step: e.target.value })}
         />
       )}
 
@@ -184,10 +206,8 @@ export function ExerciseSheet({ open, initial, onClose, onSave }: Props) {
         hint={t.exerciseForm.restHint}
         type="number"
         inputMode="numeric"
-        min={0}
-        max={900}
-        value={form.rest_s ?? ""}
-        onChange={(e) => set({ rest_s: e.target.value === "" ? null : Math.max(0, numberOr(e.target.value, 90)) })}
+        value={nums.rest}
+        onChange={(e) => setNum({ rest: e.target.value })}
       />
 
       {error && <Notice tone="error">{error}</Notice>}
