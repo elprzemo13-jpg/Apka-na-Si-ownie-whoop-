@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { SyncDiagnostics } from "../../components/ui/SyncDiagnostics";
+import { ImportOldData } from "./ImportOldData";
 import { useAuth } from "../../lib/auth/AuthProvider";
 import { t } from "../../lib/i18n/pl";
 
@@ -26,6 +27,7 @@ export function SettingsPage() {
         <Row label={t.settings.inviteCode} value={profile?.invite_code ?? "—"} />
       </div>
       <SyncDiagnostics />
+      <ImportOldData />
 
       <Button
         variant="ghost"

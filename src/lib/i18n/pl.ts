@@ -99,6 +99,18 @@ export const pl = {
     lastSync: "Ostatnia synchronizacja",
     syncNow: "Synchronizuj teraz",
   },
+  importOld: {
+    title: "Import ze starej aplikacji",
+    body:
+      "Masz historię w poprzedniej apce? Wyeksportuj ją tam do CSV (Trendy → Eksportuj dane) i wczytaj plik tutaj. Import można powtórzyć — treningi, które już są, zostaną pominięte.",
+    pickFile: "Wybierz plik CSV",
+    nothingFound: "Nie znalazłem w tym pliku żadnych treningów.",
+    found: (gym: number, swim: number) => `Znalazłem ${gym} treningów siłowych i ${swim} w wodzie.`,
+    problems: (n: number) => `${n} wierszy pominę`,
+    confirm: "Zaimportuj",
+    done: (imported: number, skipped: number) =>
+      `Zaimportowano ${imported} treningów, pominięto ${skipped} już istniejących.`,
+  },
   errors: {
     generic: "Coś poszło nie tak. Spróbuj ponownie.",
     profileLoad: "Nie udało się wczytać Twojego konta. Sprawdź połączenie z internetem.",
