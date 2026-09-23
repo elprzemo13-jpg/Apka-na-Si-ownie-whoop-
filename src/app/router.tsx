@@ -15,6 +15,7 @@ import { EnduranceWorkoutPage } from "../routes/workout/EnduranceWorkoutPage";
 import { LogPage } from "../routes/log/LogPage";
 import { TrendsPage } from "../routes/trends/TrendsPage";
 import { SettingsPage } from "../routes/settings/SettingsPage";
+import { FriendsPage } from "../routes/friends/FriendsPage";
 
 export const router = createBrowserRouter([
   { path: "login", element: <GuestOnly><LoginPage /></GuestOnly> },
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
       { path: "workout/endurance", element: <EnduranceWorkoutPage /> },
       { path: "log", element: <LogPage /> },
       { path: "trends", element: <TrendsPage /> },
+      { path: "friends", element: <FriendsPage /> },
       { path: "settings", element: <SettingsPage /> },
       { path: "*", element: <TodayPage /> },
     ],

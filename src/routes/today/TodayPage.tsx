@@ -145,7 +145,12 @@ export function TodayPage() {
         </Link>
       )}
 
-      <div className="section-label mt-5 mb-2.5">{t.today.thisWeek}</div>
+      <div className="mt-5 mb-2.5 flex items-center justify-between">
+        <span className="section-label">{t.today.thisWeek}</span>
+        <Link to="/trends" className="text-[11px] text-dim underline">
+          {t.nav.trends} →
+        </Link>
+      </div>
       <WeekList sessions={thisWeek} />
     </div>
   );

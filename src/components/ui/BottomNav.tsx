@@ -7,7 +7,7 @@ const tabs = [
   { to: "/", label: t.nav.today, end: true },
   { to: "/plan", label: t.nav.plan },
   { to: "/log", label: t.nav.log },
-  { to: "/trends", label: t.nav.trends },
+  { to: "/friends", label: t.nav.friends },
 ] as const;
 
 function Tab({ to, label, end }: { to: string; label: string; end?: boolean }) {
@@ -27,7 +27,7 @@ function Tab({ to, label, end }: { to: string; label: string; end?: boolean }) {
 }
 
 export function BottomNav({ onAdd }: Props) {
-  const [today, plan, log, trends] = tabs;
+  const [today, plan, log, friends] = tabs;
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-app items-center border-t border-line bg-bg pt-2.5">
       <Tab {...today} />
@@ -43,7 +43,7 @@ export function BottomNav({ onAdd }: Props) {
         </button>
       </div>
       <Tab {...log} />
-      <Tab {...trends} />
+      <Tab {...friends} />
     </nav>
   );
 }

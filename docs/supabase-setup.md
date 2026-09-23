@@ -12,6 +12,7 @@ Każdy plik uruchamiaj **raz**. Błąd „already exists" oznacza, że plik był
 | `20260921000001_schema.sql` | 2026-09-22 |
 | `20260921000002_rls.sql` | 2026-09-22 |
 | `20260922000003_access_level_viewer.sql` | 2026-09-22 |
+| `20260923000004_social.sql` | — |
 
 ## Authentication → URL Configuration
 
@@ -64,3 +65,9 @@ Wbudowany serwer Supabase wysyła maile tylko do członków zespołu projektu. D
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | klucz `sb_publishable_…` (ten sam co w `.env.local`) |
 
 Po dodaniu: Deploys → Trigger deploy → Deploy site.
+
+## Brevo — na co uważać
+
+- Klucz SMTP **wygasa po 90 dniach bez użycia**, niezależnie od daty ważności. Jeśli maile nagle przestaną dochodzić, wygeneruj nowy w Brevo (SMTP & API → SMTP) i podmień hasło w Supabase.
+- Nadawca na adresie Gmail nie ma podpisu DKIM dla własnej domeny, więc część wiadomości trafia do spamu. Rozwiązanie docelowe: własna domena (~50 zł/rok) i jej uwierzytelnienie w Brevo.
+- Część transakcyjna konta Brevo wymaga weryfikacji telefonu, a czasem ręcznej aktywacji przez wsparcie.
