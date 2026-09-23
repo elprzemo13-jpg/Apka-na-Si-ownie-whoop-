@@ -43,20 +43,20 @@ export async function importSessions(
     }
     seen.add(importKey(session));
 
-    if (session.discipline === "swim") {
+    if (session.discipline !== "gym") {
       await save(
         "sessions",
         newRow({
           user_id: userId,
-          discipline: "swim" as const,
+          discipline: session.discipline,
           performed_on: session.performedOn,
           plan_day_id: null,
           day_label_snapshot: null,
           distance_m: session.distanceM,
           duration_s: session.durationS,
           session_type: session.sessionType,
-          swim_style: session.style,
-          underwater_m: session.underwaterM,
+          swim_style: session.discipline === "swim" ? session.style : null,
+          underwater_m: session.discipline === "swim" ? session.underwaterM : null,
           notes: session.notes,
           warmup_done: false,
           stretch_done: false,

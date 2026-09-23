@@ -61,7 +61,7 @@ describe("parseOldAppCsv", () => {
       csv(
         "brak-daty;silownia;D1;Przysiad;1;6;60;;;;;;;1;1;",
         "2026-09-14;woda;;;;;;;;;;;;;;",
-        "2026-09-14;bieganie;;;;;;5000;25;;;;;;;",
+        "2026-09-14;joga;;;;;;5000;25;;;;;;;",
       ),
     );
     expect(result.sessions).toHaveLength(0);

@@ -1,4 +1,5 @@
 import { EmptyState } from "../../components/ui/EmptyState";
+import { ExportButton } from "../../components/ui/ExportButton";
 import { useAuth } from "../../lib/auth/AuthProvider";
 import { fromIsoDate, isInWeek, weekStart } from "../../lib/dates";
 import { useAllRecords, useLoadSessions, type LoadRow } from "../../lib/data/queries";
@@ -132,6 +133,8 @@ export function TrendsPage() {
           </div>
         ))}
       </div>
+
+      <ExportButton />
     </div>
   );
 }

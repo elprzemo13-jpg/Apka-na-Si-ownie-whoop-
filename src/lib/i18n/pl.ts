@@ -139,6 +139,12 @@ export const pl = {
     you: "Ty",
     offline: "Znajomi wymagają połączenia z internetem.",
   },
+  export: {
+    button: "Eksportuj dane (CSV)",
+    downloaded: "Plik pobrany. Otworzysz go w Excelu i w Arkuszach Google. Ten sam plik możesz wczytać z powrotem w zakładce Konto.",
+    copied: "Pobieranie zablokowane, więc skopiowałem dane do schowka.",
+    failed: "Nie udało się pobrać ani skopiować pliku.",
+  },
   importOld: {
     title: "Import ze starej aplikacji",
     body:
